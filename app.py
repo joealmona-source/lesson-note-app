@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
-from docx import Document  # <--- NEW
-from io import BytesIO     # <--- NEW
+from docx import Document
+from io import BytesIO
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -14,7 +14,9 @@ st.set_page_config(
 with st.sidebar:
     st.title("⚙️ Class Profile")
     
-    # API Key Handling (See instructions below on how to hide this later)
+    # API Key Handling
+    # Note: If you want to use the school's central key, replace the line below with:
+    # api_key = st.secrets["OPENAI_API_KEY"]
     api_key = st.text_input("OpenAI API Key", type="password", help="Ask the admin for the key if you don't have one.")
     
     st.markdown("---")
@@ -91,7 +93,7 @@ if st.button("Generate Lesson Note", type="primary"):
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
                 response = client.chat.completions.create(
-                    model="gpt-4o", # Use gpt-3.5-turbo if you want to save money
+                    model="gpt-4o", 
                     messages=[
                         {"role": "system", "content": "You are a highly experienced Nigerian teacher and curriculum developer. You are detailed, formal, and strictly follow the requested structure."},
                         {"role": "user", "content": prompt_text}
@@ -106,26 +108,24 @@ if st.button("Generate Lesson Note", type="primary"):
                 st.markdown("---")
                 st.markdown(result)
                 
-            # --- WORD DOCUMENT GENERATION ---
-            doc = Document()
-            doc.add_heading(f"Lesson Note: {topic}", 0)
-
-            # Add the generated content to the Word file
-            doc.add_paragraph(result)
-
-            # Save to memory buffer
-            buffer = BytesIO()
-            doc.save(buffer)
-            buffer.seek(0)
-
-            # Download Button for Word
-            st.download_button(
-                label="📄 Download as Word Document",
-                data=buffer,
-                file_name=f"{subject}_{week_num}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
-
+                # --- WORD DOCUMENT GENERATION ---
+                doc = Document()
+                doc.add_heading(f"Lesson Note: {topic}", 0)
+                doc.add_paragraph(result)
+                
+                # Save to memory buffer
+                buffer = BytesIO()
+                doc.save(buffer)
+                buffer.seek(0)
+                
+                # Download Button for Word
+                st.download_button(
+                    label="📄 Download as Word Document",
+                    data=buffer,
+                    file_name=f"{subject}_{week_num}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
                 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
+
