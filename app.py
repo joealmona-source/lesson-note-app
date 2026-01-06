@@ -1,5 +1,7 @@
 import streamlit as st
 import openai
+from docx import Document  # <--- NEW
+from io import BytesIO     # <--- NEW
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -106,12 +108,27 @@ if st.button("Generate Lesson Note", type="primary"):
                 
                 # Download Button
                 filename = f"Week_{week_num}_{subject}_{class_level}.txt".replace(" ", "_")
-                st.download_button(
-                    label="Download Note as Text File",
-                    data=result,
-                    file_name=filename,
-                    mime="text/plain"
-                )
+               
+            # --- WORD DOCUMENT GENERATION ---
+            doc = Document()
+            doc.add_heading(f"Lesson Note: {topic}", 0)
+
+            # Add the generated content to the Word file
+            doc.add_paragraph(result)
+
+            # Save to memory buffer
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+
+            # Download Button for Word
+            st.download_button(
+                label="📄 Download as Word Document",
+                data=buffer,
+                file_name=f"{subject}_{week_num}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
                 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
