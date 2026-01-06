@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+import openai
 from docx import Document
 from io import BytesIO
 
@@ -10,14 +10,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- SETUP GOOGLE GEMINI ---
+# --- SETUP: USE GROQ (FREE & FAST) ---
 try:
-    # 1. Get the Key
-    api_key = st.secrets["GOOGLE_API_KEY"]
-    # 2. Configure Google
-    genai.configure(api_key=api_key)
+    client = openai.OpenAI(
+        api_key=st.secrets["GROQ_API_KEY"],
+        base_url="https://api.groq.com/openai/v1"
+    )
 except:
-    st.error("⚠️ Key Error. Please check your Secrets on Streamlit.")
+    st.error("⚠️ Key Error. Please check your Secrets for GROQ_API_KEY.")
     st.stop()
 
 # --- SIDEBAR: CLASS DATA ---
@@ -127,12 +127,17 @@ if st.button("Generate Lesson Note", type="primary"):
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # --- USE THE STANDARD MODEL ---
-                # We use 'gemini-1.5-flash' because it is the current standard free model.
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # WE USE GROQ'S LLAMA 3 MODEL (FREE)
+                response = client.chat.completions.create(
+                    model="llama3-70b-8192", 
+                    messages=[
+                        {"role": "system", "content": "You are a helpful Nigerian teacher."},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    temperature=0.7
+                )
                 
-                response = model.generate_content(prompt_text)
-                result = response.text
+                result = response.choices[0].message.content
                 
                 st.success("Lesson Note Generated Successfully!")
                 st.markdown("---")
@@ -156,7 +161,5 @@ if st.button("Generate Lesson Note", type="primary"):
                 )
                 
             except Exception as e:
-                # If Flash fails, the error will show here.
                 st.error(f"Error: {e}")
-                st.info("Tip: If you see a 404 error, it means your API Key is not active.")
 
