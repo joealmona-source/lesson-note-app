@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+import openai
 from docx import Document
 from io import BytesIO
 
@@ -10,12 +10,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- SETUP GOOGLE GEMINI ---
+# --- SETUP: USE OPENAI CLIENT WITH GOOGLE BACKEND ---
 try:
-    api_key = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=api_key)
+    # We use the OpenAI library, but point it to Google's Server
+    client = openai.OpenAI(
+        api_key=st.secrets["GOOGLE_API_KEY"],
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
 except:
-    st.error("⚠️ Google API Key not found. Please check your Secrets settings.")
+    st.error("⚠️ API Key Error. Please check your Secrets.")
     st.stop()
 
 # --- SIDEBAR: CLASS DATA ---
@@ -55,7 +58,6 @@ subtopics = st.text_area("Subtopics", placeholder="e.g. Factorization of simple 
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     
-    # 1. MATHEMATICS
     if "math" in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -67,7 +69,6 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (5 practice calculation questions)."
 
-    # 2. ENGLISH (BUT NOT LITERATURE)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -79,7 +80,6 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (Write an essay or answer comprehensive questions)."
 
-    # 3. LITERATURE & OTHERS
     else:
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -125,17 +125,22 @@ if st.button("Generate Lesson Note", type="primary"):
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # --- USING GEMINI PRO (The Reliable Model) ---
-                model = genai.GenerativeModel('gemini-pro')
+                # We ask for "gemini-1.5-flash" via the OpenAI client
+                response = client.chat.completions.create(
+                    model="gemini-1.5-flash",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful Nigerian teacher."},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    temperature=0.7
+                )
                 
-                response = model.generate_content(prompt_text)
-                result = response.text
+                result = response.choices[0].message.content
                 
                 st.success("Lesson Note Generated Successfully!")
                 st.markdown("---")
                 st.markdown(result)
                 
-                # Word Doc
                 doc = Document()
                 doc.add_heading(f"Lesson Note: {topic}", 0)
                 clean_text = result.replace("**", "").replace("###", "") 
