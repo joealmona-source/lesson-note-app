@@ -3,7 +3,7 @@ import openai
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="Teacher's Comrade",
+    page_title="Lesson Note Generator by Tr Joseph",
     page_icon="📚",
     layout="wide"
 )
