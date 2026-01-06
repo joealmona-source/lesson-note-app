@@ -57,7 +57,12 @@ subtopics = st.text_area("Subtopics", placeholder="e.g. Factorization of simple 
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     
-    # 1. MATHEMATICS
+    # DEFAULT: Board Summary is ON for everyone (except Math/English below)
+    board_summary_section = """
+    9. **Board Summary**: (EXTREMELY IMPORTANT: ELABORATE and DETAILED summary suitable for copying. Use full paragraphs and subheadings).
+    """
+
+    # 1. MATHEMATICS (No Board Summary, uses Examples)
     if "math" in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -67,9 +72,9 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
            - **AT LEAST 3 SOLVED WORKED EXAMPLES** (Step-by-step calculations).
            - **DO NOT** generate a Board Summary.
         """
-        end_section = "9. **Weekly Assignment**: (5 practice calculation questions)."
+        board_summary_section = "" # Remove Board Summary for Math
 
-    # 2. ENGLISH (BUT NOT LITERATURE)
+    # 2. ENGLISH (Grammar/Spoken - No Board Summary, uses Exercises)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -79,20 +84,18 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
            - **CLASS EXERCISES:** 3-5 quick drill questions.
            - **DO NOT** generate a Board Summary.
         """
-        end_section = "9. **Weekly Assignment**: (Write an essay or answer comprehensive questions)."
+        board_summary_section = "" # Remove Board Summary for English Language
 
-    # 3. LITERATURE & OTHERS
+    # 3. LITERATURE & OTHERS (Standard)
     else:
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
            - Split this section into {pers} distinct Periods/Days.
            - Explain concepts clearly.
         """
-        end_section = """
-        9. **Board Summary**: (EXTREMELY IMPORTANT: ELABORATE and DETAILED summary suitable for copying. Use full paragraphs and subheadings).
-        """
+        # Board Summary remains active (as defined at the top)
 
-    # --- THE "HIGH QUALITY" INSTRUCTIONS ---
+    # --- THE FINAL PROMPT STRUCTURE ---
     return f"""
     Act as a {sect} {subj} curriculum expert in Nigeria. 
     Generate a fully comprehensive lesson note for {cls}.
@@ -116,7 +119,8 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         * V. Eliciting the desired behaviour: (Describe a specific class activity, discussion, or classwork where students apply what they learnt).
         * VI. Providing feedback: (Explain how the teacher corrects wrong answers and commends correct ones. Give examples of praise).
     7.  **Assessment Questions**: (5 likely exam questions).
-    8.  {end_section}
+    8.  **Assignments**: (3 likely exam questions).
+    {board_summary_section}
     """
 
 # --- GENERATION LOGIC ---
