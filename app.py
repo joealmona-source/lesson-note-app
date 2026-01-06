@@ -1,6 +1,5 @@
 import streamlit as st
-import requests
-import json
+import google.generativeai as genai
 from docx import Document
 from io import BytesIO
 
@@ -11,39 +10,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- SETUP API KEY ---
+# --- SETUP GOOGLE GEMINI ---
 try:
-    API_KEY = st.secrets["GOOGLE_API_KEY"]
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    genai.configure(api_key=api_key)
 except:
     st.error("⚠️ Google API Key not found. Please check your Secrets settings.")
     st.stop()
 
-# --- DIRECT CONNECTION FUNCTION (The Fix) ---
-def generate_with_gemini(prompt_text):
-    # We use the direct URL for Gemini 1.5 Flash (Fast & Free)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-    
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{
-            "parts": [{"text": prompt_text}]
-        }]
-    }
-    
-    # Send the signal directly
-    response = requests.post(url, headers=headers, json=payload)
-    
-    if response.status_code == 200:
-        # Success! Extract the text
-        return response.json()['candidates'][0]['content']['parts'][0]['text']
-    else:
-        # Failure - Show the raw error
-        raise Exception(f"Google Error {response.status_code}: {response.text}")
-
 # --- SIDEBAR: CLASS DATA ---
 with st.sidebar:
     st.title("⚙️ Class Profile")
-    st.success("✅ System Status: Online")
+    st.success("✅ System Status: Online & Free")
     
     st.header("General Info")
     section = st.selectbox("Section", ["Nursery", "Primary", "JSS", "SSS"])
@@ -89,7 +67,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (5 practice calculation questions)."
 
-    # 2. ENGLISH (NOT LITERATURE)
+    # 2. ENGLISH (BUT NOT LITERATURE)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -101,7 +79,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (Write an essay or answer comprehensive questions)."
 
-    # 3. OTHERS
+    # 3. LITERATURE & OTHERS
     else:
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -143,15 +121,16 @@ if st.button("Generate Lesson Note", type="primary"):
     if not topic:
         st.warning("Please enter a topic.")
     else:
-        # Build prompt
         prompt_text = build_prompt(subject, topic, subtopics, section, class_level, sex, avg_age, periods, duration, ref_materials)
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # --- CALL THE DIRECT FUNCTION ---
-                result = generate_with_gemini(prompt_text)
+                # --- USING GEMINI PRO (The Reliable Model) ---
+                model = genai.GenerativeModel('gemini-pro')
                 
-                # Success
+                response = model.generate_content(prompt_text)
+                result = response.text
+                
                 st.success("Lesson Note Generated Successfully!")
                 st.markdown("---")
                 st.markdown(result)
