@@ -92,6 +92,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         9. **Board Summary**: (EXTREMELY IMPORTANT: ELABORATE and DETAILED summary suitable for copying. Use full paragraphs and subheadings).
         """
 
+    # --- THE "HIGH QUALITY" INSTRUCTIONS ---
     return f"""
     Act as a {sect} {subj} curriculum expert in Nigeria. 
     Generate a fully comprehensive lesson note for {cls}.
@@ -103,17 +104,17 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
 
     STRICT OUTPUT FORMAT:
     1.  **Header Details**: Week, Class, Topic, Subtopics, Sex, Average Age, Periods, Duration.
-    2.  **Behavioural Objectives**: (Use action verbs).
-    3.  **Instructional Materials**.
+    2.  **Behavioural Objectives**: (Use action verbs like Define, Mention, List. Do not use 'Know' or 'Understand').
+    3.  **Instructional Materials**: (List tangible objects or charts).
     4.  **Reference Materials**.
-    5.  **Entry Behaviour**.
+    5.  **Entry Behaviour**: (Describe what the students already know from their daily lives that relates to this topic).
     6.  **Procedures**:
-        * I. Gaining students attention
-        * II. Informing students of the objectives
-        * III. Recall of previous knowledge
+        * I. Gaining students attention: (DO NOT just say "Greet students". Describe a specific short story, a physical demonstration, or a catchy real-world scenario to grab their interest immediately).
+        * II. Informing students of the objectives: (Explain clearly what they will learn and WHY it is important to them).
+        * III. Recall of previous knowledge: (List 3 specific questions the teacher asks to link the last topic to this new one).
         {special_instruction}
-        * V. Eliciting the desired behaviour
-        * VI. Providing feedback
+        * V. Eliciting the desired behaviour: (Describe a specific class activity, discussion, or classwork where students apply what they learnt).
+        * VI. Providing feedback: (Explain how the teacher corrects wrong answers and commends correct ones. Give examples of praise).
     7.  **Assessment Questions**: (5 likely exam questions).
     8.  {end_section}
     """
@@ -127,11 +128,11 @@ if st.button("Generate Lesson Note", type="primary"):
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # WE USE GROQ'S LLAMA 3 MODEL (FREE)
+                # WE USE GROQ'S NEWEST MODEL
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile", 
                     messages=[
-                        {"role": "system", "content": "You are a helpful Nigerian teacher."},
+                        {"role": "system", "content": "You are an experienced Nigerian teacher who writes detailed, engaging, and elaborate lesson notes."},
                         {"role": "user", "content": prompt_text}
                     ],
                     temperature=0.7
