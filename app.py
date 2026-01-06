@@ -83,7 +83,7 @@ if st.button("Generate Lesson Note", type="primary"):
             * VI. Providing feedback
         7.  **Assessment Questions**: (5 likely exam questions).
         8.  **Assignments**: (3 likely exam questions).
-        9.  **Board Summary**: (Paragraph form, subtopic headings, at least 3 solved examples where applicable).
+        9.  **Board Summary**: (EXTREMELY IMPORTANT: This must be an ELABORATE and DETAILED summary suitable for students to copy as notes. Do not summarize briefly. Use full paragraphs, clear subheadings for every subtopic, and explain concepts in depth. Include at least 3 solved examples or illustrations where applicable).
         """
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
