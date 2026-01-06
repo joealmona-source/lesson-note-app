@@ -129,7 +129,7 @@ if st.button("Generate Lesson Note", type="primary"):
             try:
                 # WE USE GROQ'S LLAMA 3 MODEL (FREE)
                 response = client.chat.completions.create(
-                    model="llama3-70b-8192", 
+                    model="llama-3.3-70b-versatile", 
                     messages=[
                         {"role": "system", "content": "You are a helpful Nigerian teacher."},
                         {"role": "user", "content": prompt_text}
