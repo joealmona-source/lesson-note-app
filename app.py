@@ -130,7 +130,7 @@ if st.button("Generate Lesson Note", type="primary"):
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
                 # Use Google's Gemini 1.5 Flash model
-                model = genai.GenerativeModel('gemini-pro')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 response = model.generate_content(prompt_text)
                 result = response.text
