@@ -106,9 +106,6 @@ if st.button("Generate Lesson Note", type="primary"):
                 st.markdown("---")
                 st.markdown(result)
                 
-                # Download Button
-                filename = f"Week_{week_num}_{subject}_{class_level}.txt".replace(" ", "_")
-               
             # --- WORD DOCUMENT GENERATION ---
             doc = Document()
             doc.add_heading(f"Lesson Note: {topic}", 0)
