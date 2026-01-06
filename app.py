@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+import requests
 from docx import Document
 from io import BytesIO
 
@@ -10,21 +10,52 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- SETUP: USE OPENAI CLIENT WITH GOOGLE BACKEND ---
+# --- SETUP API KEY ---
 try:
-    # We use the OpenAI library, but point it to Google's Server
-    client = openai.OpenAI(
-        api_key=st.secrets["GOOGLE_API_KEY"],
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
+    API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
-    st.error("⚠️ API Key Error. Please check your Secrets.")
+    st.error("⚠️ Google API Key not found. Please check your Secrets settings.")
     st.stop()
+
+# --- THE BRUTE FORCE GENERATOR ---
+def generate_with_gemini_robust(prompt_text):
+    # List of models to try in order. If one fails, we try the next.
+    models_to_try = [
+        "gemini-1.5-flash",
+        "gemini-pro",
+        "gemini-1.0-pro-latest"
+    ]
+    
+    last_error = ""
+
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
+        
+        try:
+            response = requests.post(url, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                # SUCCESS! Return the text and the model that worked
+                text = response.json()['candidates'][0]['content']['parts'][0]['text']
+                return text, model_name
+            else:
+                # If it failed, save the error and continue to the next model
+                last_error = f"Model {model_name} failed with {response.status_code}"
+                continue
+                
+        except Exception as e:
+            last_error = str(e)
+            continue
+            
+    # If we finish the loop and nothing worked:
+    raise Exception(f"All models failed. Last error: {last_error}")
 
 # --- SIDEBAR: CLASS DATA ---
 with st.sidebar:
     st.title("⚙️ Class Profile")
-    st.success("✅ System Status: Online & Free")
+    st.success("✅ System Status: Online")
     
     st.header("General Info")
     section = st.selectbox("Section", ["Nursery", "Primary", "JSS", "SSS"])
@@ -123,24 +154,16 @@ if st.button("Generate Lesson Note", type="primary"):
     else:
         prompt_text = build_prompt(subject, topic, subtopics, section, class_level, sex, avg_age, periods, duration, ref_materials)
 
-        with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
+        with st.spinner("Connecting to Google... (Trying multiple paths)..."):
             try:
-                # We ask for "gemini-1.5-flash" via the OpenAI client
-                response = client.chat.completions.create(
-                    model="gemini-1.5-flash",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful Nigerian teacher."},
-                        {"role": "user", "content": prompt_text}
-                    ],
-                    temperature=0.7
-                )
+                # RUN THE ROBUST GENERATOR
+                result, model_used = generate_with_gemini_robust(prompt_text)
                 
-                result = response.choices[0].message.content
-                
-                st.success("Lesson Note Generated Successfully!")
+                st.success(f"Lesson Note Generated Successfully! (Used Engine: {model_used})")
                 st.markdown("---")
                 st.markdown(result)
                 
+                # Word Doc
                 doc = Document()
                 doc.add_heading(f"Lesson Note: {topic}", 0)
                 clean_text = result.replace("**", "").replace("###", "") 
@@ -158,5 +181,6 @@ if st.button("Generate Lesson Note", type="primary"):
                 )
                 
             except Exception as e:
-                st.error(f"An error occurred: {e}")
+                st.error(f"System Error: {e}")
+                st.info("Troubleshooting: Please check that your Google API Key is valid and has 'Generative Language API' enabled in the Google Cloud Console.")
 
