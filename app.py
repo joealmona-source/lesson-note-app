@@ -5,7 +5,7 @@ from io import BytesIO
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="Exquisite Lesson Notes by Joseph Almona",
+    page_title="Exquisite Lesson Notes",
     page_icon="📚",
     layout="wide"
 )
@@ -25,15 +25,15 @@ with st.sidebar:
     
     st.header("General Info")
     section = st.selectbox("Section", ["Nursery", "Primary", "JSS", "SSS"])
-    class_level = st.text_input("Class", value="JSS 2")
+    class_level = st.text_input("Class", value="JSS 3")
     subject = st.text_input("Subject", value="Mathematics")
     
     col1, col2 = st.columns(2)
     with col1:
         sex = st.text_input("Sex", value="Mixed")
-        periods = st.number_input("Periods", min_value=1, value=3)
+        periods = st.number_input("Periods", min_value=1, value=5)
     with col2:
-        avg_age = st.text_input("Avg Age", value="12 years")
+        avg_age = st.text_input("Avg Age", value="13 years")
         duration = st.text_input("Duration", value="40 mins")
         
     ref_materials = st.text_area("Reference Materials", value="New General Mathematics, UBE Standard Curriculum")
@@ -48,14 +48,14 @@ c1, c2 = st.columns([1, 3])
 with c1:
     week_num = st.number_input("Week Number", min_value=1, value=1)
 with c2:
-    topic = st.text_input("Topic", placeholder="e.g. Quadratic Equations")
+    topic = st.text_input("Topic", placeholder="e.g. Factorization")
 
-subtopics = st.text_area("Subtopics", placeholder="e.g. Factorization, Completing the Square, Formula Method")
+subtopics = st.text_area("Subtopics", placeholder="e.g. Factorization of simple algebraic expressions...")
 
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     
-    # 1. MATHEMATICS STRUCTURE (Calculation focus)
+    # 1. MATHEMATICS STRUCTURE
     if "math" in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -67,8 +67,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (5 practice calculation questions)."
 
-    # 2. ENGLISH LANGUAGE (Grammar/Drill focus) - BUT EXCLUDE LITERATURE
-    # We check if it is English BUT NOT Literature
+    # 2. ENGLISH LANGUAGE (BUT NOT LITERATURE)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -80,19 +79,17 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         """
         end_section = "9. **Weekly Assignment**: (Write an essay or answer comprehensive questions)."
 
-    # 3. LITERATURE & OTHER SUBJECTS (Standard Note focus)
-    # Literature falls here, so it gets the Elaborate Board Summary.
+    # 3. LITERATURE & OTHERS
     else:
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
            - Split this section into {pers} distinct Periods/Days.
-           - Explain concepts clearly and in detail.
+           - Explain concepts clearly.
         """
         end_section = """
-        9. **Board Summary**: (EXTREMELY IMPORTANT: This must be an ELABORATE and DETAILED summary suitable for students to copy into their notes. Do not summarize briefly. Use full paragraphs, clear subheadings for every subtopic, and explain concepts in depth. Include at least 3 solved examples or illustrations where applicable).
+        9. **Board Summary**: (EXTREMELY IMPORTANT: This must be an ELABORATE and DETAILED summary suitable for students to copy. Use full paragraphs, clear subheadings, and explain concepts in depth. Include at least 3 solved examples or illustrations where applicable).
         """
 
-    # Combine into the final prompt
     return f"""
     Act as a {sect} {subj} curriculum expert in Nigeria. 
     Generate a fully comprehensive lesson note for {cls}.
@@ -124,23 +121,20 @@ if st.button("Generate Lesson Note", type="primary"):
     if not topic:
         st.warning("Please enter a topic.")
     else:
-        # Build the smart prompt based on the subject
         prompt_text = build_prompt(subject, topic, subtopics, section, class_level, sex, avg_age, periods, duration, ref_materials)
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # Use Google's Gemini 1.5 Flash model
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # --- CRITICAL FIX: USING GEMINI PRO ---
+                model = genai.GenerativeModel('gemini-pro') 
                 
                 response = model.generate_content(prompt_text)
                 result = response.text
                 
-                # Display Result
                 st.success("Lesson Note Generated Successfully!")
                 st.markdown("---")
                 st.markdown(result)
                 
-                # --- WORD DOCUMENT GENERATION ---
                 doc = Document()
                 doc.add_heading(f"Lesson Note: {topic}", 0)
                 clean_text = result.replace("**", "").replace("###", "") 
