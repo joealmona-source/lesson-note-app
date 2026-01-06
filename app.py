@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 from docx import Document
 from io import BytesIO
 
@@ -10,18 +11,39 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- SETUP GOOGLE GEMINI ---
+# --- SETUP API KEY ---
 try:
-    api_key = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=api_key)
+    API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
     st.error("⚠️ Google API Key not found. Please check your Secrets settings.")
     st.stop()
 
+# --- DIRECT CONNECTION FUNCTION (The Fix) ---
+def generate_with_gemini(prompt_text):
+    # We use the direct URL for Gemini 1.5 Flash (Fast & Free)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt_text}]
+        }]
+    }
+    
+    # Send the signal directly
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code == 200:
+        # Success! Extract the text
+        return response.json()['candidates'][0]['content']['parts'][0]['text']
+    else:
+        # Failure - Show the raw error
+        raise Exception(f"Google Error {response.status_code}: {response.text}")
+
 # --- SIDEBAR: CLASS DATA ---
 with st.sidebar:
     st.title("⚙️ Class Profile")
-    st.info("✅ System Status: Online & Free")
+    st.success("✅ System Status: Online")
     
     st.header("General Info")
     section = st.selectbox("Section", ["Nursery", "Primary", "JSS", "SSS"])
@@ -55,7 +77,7 @@ subtopics = st.text_area("Subtopics", placeholder="e.g. Factorization of simple 
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     
-    # 1. MATHEMATICS STRUCTURE
+    # 1. MATHEMATICS
     if "math" in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -63,23 +85,23 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
            **FOR EACH PERIOD, YOU MUST INCLUDE:**
            - Detailed explanation of the subtopic.
            - **AT LEAST 3 SOLVED WORKED EXAMPLES** (Step-by-step calculations).
-           - **DO NOT** generate a Board Summary at the end. The examples here serve as the notes.
+           - **DO NOT** generate a Board Summary.
         """
         end_section = "9. **Weekly Assignment**: (5 practice calculation questions)."
 
-    # 2. ENGLISH LANGUAGE (BUT NOT LITERATURE)
+    # 2. ENGLISH (NOT LITERATURE)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
            **CRITICAL:** Split this section into {pers} distinct Periods/Days.
            **FOR EACH PERIOD, YOU MUST INCLUDE:**
-           - Explanation of the grammar/speech/reading rule.
-           - **CLASS EXERCISES:** Provide 3-5 quick drill questions for students to solve in class immediately after the explanation.
-           - **DO NOT** generate a Board Summary at the end.
+           - Explanation of the rule.
+           - **CLASS EXERCISES:** 3-5 quick drill questions.
+           - **DO NOT** generate a Board Summary.
         """
         end_section = "9. **Weekly Assignment**: (Write an essay or answer comprehensive questions)."
 
-    # 3. LITERATURE & OTHERS
+    # 3. OTHERS
     else:
         special_instruction = f"""
         * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
@@ -87,7 +109,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
            - Explain concepts clearly.
         """
         end_section = """
-        9. **Board Summary**: (EXTREMELY IMPORTANT: This must be an ELABORATE and DETAILED summary suitable for students to copy. Use full paragraphs, clear subheadings, and explain concepts in depth. Include at least 3 solved examples or illustrations where applicable).
+        9. **Board Summary**: (EXTREMELY IMPORTANT: ELABORATE and DETAILED summary suitable for copying. Use full paragraphs and subheadings).
         """
 
     return f"""
@@ -121,20 +143,20 @@ if st.button("Generate Lesson Note", type="primary"):
     if not topic:
         st.warning("Please enter a topic.")
     else:
+        # Build prompt
         prompt_text = build_prompt(subject, topic, subtopics, section, class_level, sex, avg_age, periods, duration, ref_materials)
 
         with st.spinner("Consulting the curriculum... this may take about 30 seconds..."):
             try:
-                # --- CRITICAL FIX: USING GEMINI PRO ---
-                model = genai.GenerativeModel('gemini-pro') 
+                # --- CALL THE DIRECT FUNCTION ---
+                result = generate_with_gemini(prompt_text)
                 
-                response = model.generate_content(prompt_text)
-                result = response.text
-                
+                # Success
                 st.success("Lesson Note Generated Successfully!")
                 st.markdown("---")
                 st.markdown(result)
                 
+                # Word Doc
                 doc = Document()
                 doc.add_heading(f"Lesson Note: {topic}", 0)
                 clean_text = result.replace("**", "").replace("###", "") 
