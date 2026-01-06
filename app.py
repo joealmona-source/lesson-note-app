@@ -32,7 +32,7 @@ with st.sidebar:
     ref_materials = st.text_area("Reference Materials", value="New General Mathematics, UBE Standard Curriculum")
 
 # --- MAIN PAGE ---
-st.title("🇳🇬 Nigerian Lesson Note Generator")
+st.title("🇳🇬 Lesson Note Generator by Tr Joseph")
 st.markdown("Generate comprehensive lesson notes in line with the **National Curriculum**.")
 
 # Input for the specific week
