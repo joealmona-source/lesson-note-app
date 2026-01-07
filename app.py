@@ -38,7 +38,7 @@ with st.sidebar:
         avg_age = st.text_input("Avg Age", value="15 years")
         duration = st.text_input("Duration", value="40 mins")
         
-    ref_materials = st.text_area("Reference Materials", value="New General Mathematics, WAEC Curriculum")
+    ref_materials = st.text_area("Reference Materials", value="New School Physics, WAEC Curriculum")
 
 # --- MAIN PAGE ---
 st.title("🇳🇬 Exquisite Lesson Notes by Joseph Almona")
@@ -57,51 +57,48 @@ subtopics = st.text_area("Subtopics", placeholder="e.g. Concept of Projectile Mo
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     
-    # 1. MATHEMATICS (Guardrail: Strict NO Board Summary)
-    # Checks for 'math' to catch 'Maths', 'Mathematics', 'Further Math'
+    # 1. MATHEMATICS
     if "math" in subj.lower():
         special_instruction = f"""
-        * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
-           **CRITICAL: WRITE A FULL LECTURE.**
-           - Split into {pers} distinct Periods/Days.
-           - Provide EXTENSIVE detailed explanations.
-           - **AT LEAST 3 SOLVED WORKED EXAMPLES** per period (Step-by-step calculations).
-           - **DO NOT** generate a Board Summary. The examples here serve as the notes.
+        * IV. Presentation of Stimulus Materials (CONTENT DELIVERY):
+           **INSTRUCTION:** Describe the TEACHING METHOD for {pers} periods.
+           - Describe how the teacher introduces the formula/concept.
+           - Mention that the teacher solves examples on the board step-by-step.
+           - **DO NOT** just list the math. Explain HOW it is taught.
+           - **AT LEAST 3 SOLVED WORKED EXAMPLES** (The teacher solves these on the board).
         """
-        board_summary_section = "" # <--- FORCED EMPTY
+        board_summary_section = "" # No Board Summary for Math
 
-    # 2. ENGLISH LANGUAGE (Guardrail: Strict NO Board Summary)
-    # Checks for 'english' but ensures it is NOT 'literature'
+    # 2. ENGLISH LANGUAGE (Grammar/Drill)
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
-        * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
-           **CRITICAL: DETAILED GRAMMAR EXPLANATION.**
-           - Split into {pers} distinct Periods/Days.
-           - Explain the rules elaborately with multiple sentence examples.
+        * IV. Presentation of Stimulus Materials (CONTENT DELIVERY):
+           **INSTRUCTION:** Describe the TEACHING METHOD for {pers} periods.
+           - Describe how the teacher explains the rule using sentence examples.
+           - Describe how the teacher engages students to form their own sentences.
            - **CLASS EXERCISES:** 3-5 quick drill questions per period.
-           - **DO NOT** generate a Board Summary.
         """
-        board_summary_section = "" # <--- FORCED EMPTY
+        board_summary_section = "" # No Board Summary for English
 
-    # 3. ALL OTHER SUBJECTS (Physics, Econ, Basic Tech, Lit, Gov, etc.)
-    # This uses the "Smart Detection" for calculations.
+    # 3. ALL OTHER SUBJECTS (Science, Arts, Comm, etc.)
     else:
         special_instruction = f"""
-        * IV. Presentation of Stimulus materials (CONTENT DELIVERY):
-           **CRITICAL: WRITE A FULL LECTURE (NOT OUTLINES).**
+        * IV. Presentation of Stimulus Materials (CONTENT DELIVERY):
+           **INSTRUCTION:** This section must be ENGAGING and METHODOLOGICAL.
            - Split into {pers} distinct Periods/Days.
-           - **BE VERBOSE.** Write out full paragraphs of teaching content, definitions, and theories.
-           - If the topic involves calculations (like in Physics, Economics, Accounting), explain the formula clearly here.
+           - **DO NOT** just write the notes here. Instead, describe **HOW** the teacher explains the subtopics.
+           - Example: "The teacher explains [concept] by using an analogy of..." or "The teacher demonstrates..."
+           - Ensure the explanation covers the depth of the subtopic but focuses on the delivery method.
         """
         
-        # Smart Summary Logic
+        # Smart Summary Logic (Includes Definitions + Formulas if needed)
         board_summary_section = f"""
-        9. **Board Summary**: (EXTREMELY IMPORTANT: This is the note students will copy).
+        9. **Board Summary**: (EXTREMELY IMPORTANT: This is the CONTENT students copy).
+           - This section MUST contain the **Full Notes**: Definitions, Detailed Explanations, and Key Points.
            - **LOGIC CHECK:** Look at the Topic "{topic}".
-           - **IF** the topic involves **Calculations, Formulas, or Accounts** (e.g., Physics, Economics, Basic Tech, Accounting), you **MUST** include:
-             1. All relevant Formulas/Equations.
-             2. **TWO (2) SOLVED CALCULATION EXAMPLES** with clear steps.
-           - **IF** the topic is purely **Theoretical/Descriptive** (e.g., Biology, History, Government), provide a detailed text summary with subheadings.
+           - **IF** the topic involves **Calculations/Formulas** (Physics, Econ, etc.), you **MUST** add:
+             1. All derived Formulas.
+             2. **TWO (2) SOLVED CALCULATION EXAMPLES** (Data, Formula, Substitution, Answer).
         """
 
     # --- THE FINAL PROMPT STRUCTURE ---
@@ -114,19 +111,19 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     - Sex: {sex} | Avg Age: {age} | Periods: {pers} | Duration: {dur}
     - Ref Materials: {ref}
 
-    STRICT OUTPUT FORMAT:
-    1.  **Header Details**: Week, Class, Topic, Subtopics, Sex, Average Age, Periods, Duration.
-    2.  **Behavioural Objectives**: (Use action verbs like Define, Mention, List. Do not use 'Know' or 'Understand').
+    STRICT OUTPUT FORMAT (Do not skip sections):
+    1.  **Header Details**: Week, Subject, Class, Topic, Subtopics, Sex, Average Age, Periods, Duration.
+    2.  **Behavioural Objectives**: (Use action verbs like Define, Mention, List).
     3.  **Instructional Materials**: (List tangible objects or charts).
     4.  **Reference Materials**.
-    5.  **Entry Behaviour**: (Describe what the students already know from their daily lives that relates to this topic).
+    5.  **Entry Behaviour**: (Describe what students already know).
     6.  **Procedures**:
-        * I. Gaining students attention: (DO NOT just say "Greet students". Describe a specific short story, a physical demonstration, or a catchy real-world scenario to grab their interest immediately).
-        * II. Informing students of the objectives: (Explain clearly what they will learn and WHY it is important to them).
-        * III. Recall of previous knowledge: (List 3 specific questions the teacher asks to link the last topic to this new one).
+        * I. Gaining students attention: (Describe a specific story, object, or scenario to grab interest).
+        * II. Informing students of the objectives.
+        * III. Recall of previous knowledge: (3 linking questions).
         {special_instruction}
-        * V. Eliciting the desired behaviour: (Describe a specific class activity, discussion, or classwork where students apply what they learnt).
-        * VI. Providing feedback: (Explain how the teacher corrects wrong answers and commends correct ones. Give examples of praise).
+        * V. Eliciting the desired behaviour: (Class activity/discussion).
+        * VI. Providing feedback: (How the teacher corrects/praises).
     7.  **Assessment Questions**: (5 likely exam questions).
     8.  **Assignments**: (3 likely exam questions).
     {board_summary_section}
@@ -145,7 +142,7 @@ if st.button("Generate Lesson Note", type="primary"):
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile", 
                     messages=[
-                        {"role": "system", "content": "You are an experienced Nigerian teacher. You are NOT lazy. You write EXTENSIVE, DETAILED, and ELABORATE lesson notes. You write full lectures, not outlines."},
+                        {"role": "system", "content": "You are an experienced Nigerian teacher. You are detailed and follow the 6-step procedure strictly. For Step IV, describe the TEACHING METHOD, not just the notes."},
                         {"role": "user", "content": prompt_text}
                     ],
                     temperature=0.7
