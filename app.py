@@ -36,7 +36,7 @@ with st.sidebar:
         periods = st.number_input("Periods", min_value=1, value=5)
     with col2:
         avg_age = st.text_input("Avg Age", value="13 years")
-        duration = st.text_input("Duration", value="40 mins")
+        duration = st.text_input("Duration", value="40 mins each")
         
     ref_materials = st.text_area("Reference Materials", value="New General Mathematics, UBE Standard Curriculum")
 
