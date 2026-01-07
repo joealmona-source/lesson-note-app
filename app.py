@@ -117,7 +117,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
 
     **Behavioural Objectives**
     At the end of the lesson, students should be able to:
-    (List objectives using action verbs like Define, Mention, Calculate. Do not use 'Know' or 'Understand').
+    (Provide a NUMBERED LIST (1, 2, 3...) using action verbs like Define, Mention, Calculate. Do not use 'Know' or 'Understand').
 
     **Instructional Materials**
     (List tangible objects, charts, or apparatus).
@@ -147,10 +147,10 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
         (Explain how the teacher corrects and praises).
 
     **Assessment Questions**
-    (5 likely exam questions).
+    (Provide a numbered list (1, 2, 3, 4, 5) of 5 likely exam questions).
 
     **Assignments**
-    (3 likely exam questions).
+    (Provide a numbered list (1, 2, 3) of 3 likely exam questions).
     
     {board_summary_section}
     """
