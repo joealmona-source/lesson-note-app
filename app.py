@@ -27,18 +27,18 @@ with st.sidebar:
     
     st.header("General Info")
     section = st.selectbox("Section", ["Nursery", "Primary", "JSS", "SSS"])
-    class_level = st.text_input("Class", value="SSS 2")
-    subject = st.text_input("Subject", value="Physics")
+    class_level = st.text_input("Class", value="JSS 1")
+    subject = st.text_input("Subject", value="English Language")
     
     col1, col2 = st.columns(2)
     with col1:
         sex = st.text_input("Sex", value="Mixed")
-        periods = st.number_input("Periods", min_value=1, value=4)
+        periods = st.number_input("Periods", min_value=1, value=5)
     with col2:
-        avg_age = st.text_input("Avg Age", value="16 years")
+        avg_age = st.text_input("Avg Age", value="11 years")
         duration = st.text_input("Duration", value="40 mins")
         
-    ref_materials = st.text_area("Reference Materials", value="New School Physics, WAEC Curriculum")
+    ref_materials = st.text_area("Reference Materials", value="New Oxford Secondary English Course (NOSEC)")
 
 # --- MAIN PAGE ---
 st.title("🇳🇬 Exquisite Lesson Notes by Joseph Almona")
@@ -50,9 +50,9 @@ c1, c2 = st.columns([1, 3])
 with c1:
     week_num = st.number_input("Week Number", min_value=1, value=1)
 with c2:
-    topic = st.text_input("Topic", placeholder="e.g. Linear Momentum")
+    topic = st.text_input("Topic", placeholder="e.g. Adjectives")
 
-subtopics = st.text_area("Subtopics", placeholder="e.g. Concept of Momentum, Impulse, Newton's Laws of Motion, Conservation of Momentum...")
+subtopics = st.text_area("Subtopics", placeholder="e.g. Definition, Types of Adjectives, Order of Adjectives...")
 
 # --- SMART PROMPT LOGIC ---
 def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
@@ -61,10 +61,11 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     if "math" in subj.lower():
         special_instruction = f"""
         **Presentation of Stimulus Materials (CONTENT DELIVERY):**
-           **INSTRUCTION:** Write a DETAILED TEACHING NARRATIVE for {pers} periods.
+           **CRITICAL INSTRUCTION:** Write a VOLUMINOUS and DETAILED TEACHING NARRATIVE for {pers} periods.
            - Label them "Period 1", "Period 2", etc. (DO NOT use "Day").
-           - For each period, explain the concept thoroughly and show how the teacher solves examples on the board.
-           - **AT LEAST 3 SOLVED WORKED EXAMPLES** (The teacher solves these step-by-step).
+           - **Step 1 (Explanation):** For each period, write a detailed paragraph explaining the concept/logic purely in text.
+           - **Step 2 (Demonstration):** Then, show the teacher solving **AT LEAST 3 WORKED EXAMPLES** on the board step-by-step.
+           - This section must be robust.
         """
         board_summary_section = "" 
 
@@ -72,10 +73,11 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     elif "english" in subj.lower() and "literature" not in subj.lower():
         special_instruction = f"""
         **Presentation of Stimulus Materials (CONTENT DELIVERY):**
-           **INSTRUCTION:** Write a DETAILED TEACHING NARRATIVE for {pers} periods.
+           **CRITICAL INSTRUCTION:** Write a VOLUMINOUS and DETAILED TEACHING NARRATIVE for {pers} periods.
            - Label them "Period 1", "Period 2", etc. (DO NOT use "Day").
-           - Describe how the teacher explains the rules elaborately.
-           - **CLASS EXERCISES:** 3-5 quick drill questions per period.
+           - **DO NOT BE BRIEF.** For each period, write at least 2-3 paragraphs explaining the grammar rules, definitions, exceptions, and usage contexts deeply.
+           - Provide clear examples within the narrative.
+           - **CLASS EXERCISES:** After the lengthy explanation, list 3-5 drill questions.
         """
         board_summary_section = "" 
 
@@ -83,9 +85,9 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     else:
         special_instruction = f"""
         **Presentation of Stimulus Materials (CONTENT DELIVERY):**
-           **CRITICAL INSTRUCTION: THIS SECTION MUST BE VOLUMINOUS AND WEIGHTY.**
+           **CRITICAL INSTRUCTION:** THIS SECTION MUST BE VOLUMINOUS AND WEIGHTY.
            - Split the content into {pers} distinct Periods. Label them "Period 1", "Period 2" (DO NOT use "Day").
-           - For each period, write a **Detailed Narrative** (at least 2 paragraphs per period).
+           - For each period, write a **Detailed Narrative** (at least 2-3 paragraphs per period).
            - Do not just say "The teacher explains momentum". Instead, write: "The teacher introduces momentum by asking students to imagine a moving truck... The teacher then defines momentum as... and derives the formula p=mv..."
            - Explain the **Subtopics** deeply within this narrative.
         """
@@ -150,7 +152,7 @@ def build_prompt(subj, topic, subs, sect, cls, sex, age, pers, dur, ref):
     (Provide a numbered list (1, 2, 3, 4, 5) of 5 likely exam questions).
 
     **Assignments**
-    (Provide a numbered list (1, 2, 3) of 3 likely exam questions).
+    (Provide a numbered list (1, 2, 3, 4, 5) of 5 likely exam questions).
     
     {board_summary_section}
     """
@@ -199,4 +201,3 @@ if st.button("Generate Lesson Note", type="primary"):
                 
             except Exception as e:
                 st.error(f"Error: {e}")
-
